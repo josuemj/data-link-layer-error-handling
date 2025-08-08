@@ -1,5 +1,5 @@
 /**
- * Calcula cuántos bits de paridad se necesitan para k bits de datos.  2^r ≥ k + r + 1
+ * Calcula cuantos bits de paridad se necesitan para k bits de datos 2^r ≥ k + r + 1
  */
 function calculateParityBitsCount(k: number): number {
     let r = 0;
@@ -7,6 +7,40 @@ function calculateParityBitsCount(k: number): number {
         r++;
     }
     return r;
+}
+
+/**
+ * Convierte una cadena de bits en un array de numeros
+ */
+function bitsStringToArray(str: string): number[] {
+    return Array.from(str).map(ch => {
+        if (ch !== '0' && ch !== '1') {
+            throw new Error(`Carácter inválido para bit: "${ch}"`);
+        }
+        return ch === '1' ? 1 : 0;
+    });
+}
+
+/**
+ * Inserta marcadores en las posiciones de paridad y colocar los bits de datos en el resto de posiciones
+ */
+function insertParityPlaceholders(dataBits: number[]): number[] {
+    const k = dataBits.length;
+    const r = calculateParityBitsCount(k);
+    console.log('Bits de paridad: ' + r)
+    const totalLength = k + r;
+    const encoded: number[] = [];
+    let dataIndex = 0;
+
+    for (let i = 1; i <= totalLength; i++) {
+        if ((i & (i - 1)) === 0) {
+            encoded.push(0);
+        } else {
+            encoded.push(dataBits[dataIndex++]);
+        }
+    }
+
+    return encoded;
 }
 
 
@@ -24,7 +58,9 @@ function calculateParityBitsCount(k: number): number {
  * ```
  */
 export default function hammingCode(data: string): string {
-    // Implementación del código Hamming
-    console.log(`Generando código Hamming para: ${data}`);
+    const output = bitsStringToArray(data);
+    console.log(insertParityPlaceholders(output))
+
+    
     return data;
 }
