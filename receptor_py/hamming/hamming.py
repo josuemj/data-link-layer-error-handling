@@ -1,3 +1,17 @@
+from typing import List
+
+def get_parity_positions(n: int) -> List[int]:
+    """
+    Devuelve las posiciones (1-indexadas) de los bits de paridad
+    para un bloque de longitud n: 1, 2, 4, 8, …
+    """
+    positions = []
+    p = 1
+    while p <= n:
+        positions.append(p)
+        p <<= 1
+    return positions
+
 def hamming(data: str) -> str:
     """
     Procesa una cadena de bits codificada con el código de Hamming y determina 
@@ -27,4 +41,8 @@ def hamming(data: str) -> str:
       generará resultados inválidos.
     """
     print(f"Procesando mensaje Hamming (receptor): {data}")
+    bits = [int(ch) for ch in data]
+    n = len(bits)
+    parity_positions = get_parity_positions(n)
+    print('posiciones de los bits de paridad:', parity_positions)
     return data
