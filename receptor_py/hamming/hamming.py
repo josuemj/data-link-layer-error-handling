@@ -40,6 +40,12 @@ def correct_error(bits: List[int], error: int) -> None:
     corrected = bits[id]
     return original, corrected
 
+def extract_data(bits: List[int], parity_positions: List[int]) -> List[int]:
+    """
+    Extrae solo los bits de datos (omitiendo las posiciones de paridad)
+    """
+    return [bits[i] for i in range(len(bits)) if (i + 1) not in parity_positions]
+
 def hamming(data: str) -> str:
     """
     Procesa una cadena de bits codificada con el código de Hamming y determina 
@@ -62,10 +68,13 @@ def hamming(data: str) -> str:
     if error == 0:
         print("No se detectaron errores.")
     else:
-        print(f"Se detectó un error en la posición {error}.")
+        print(f"Se detecto un error en la posicion {error}.")
         original, corrected = correct_error(bits, error)
-        print(f"El bit en la posición {error} cambió de {original} a {corrected}.")
+        print(f"El bit en la posicion {error} cambio de {original} a {corrected}.")
         corrected_msg = ''.join(str(b) for b in bits)
         print(f"Mensaje corregido completo: {corrected_msg}")
 
+    data_bits = extract_data(bits, parity_positions)
+    data = ''.join(str(b) for b in data_bits)
+    print('Mensaje original: ', data)
     return data
