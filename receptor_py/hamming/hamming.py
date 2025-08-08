@@ -14,7 +14,7 @@ def get_parity_positions(n: int) -> List[int]:
 
 def compute_erros(bits: List[int], parity_positions: List[int]) -> int:
     """
-    Recalcula cada bit de paridad y construye el sindrome.
+    Recalcula cada bit de paridad y construye el error.
     El error es la suma de las posiciones de paridad que dieron paridad = 1.
     """
     n = len(bits)
@@ -28,6 +28,17 @@ def compute_erros(bits: List[int], parity_positions: List[int]) -> int:
             error += p
 
     return error
+
+def correct_error(bits: List[int], error: int) -> None:
+    """
+    Invierte el bit en la posicion indicada por el error
+    Retorna una tupla (bit_original, bit_corregido)
+    """
+    id = error - 1
+    original = bits[id]
+    bits[id] ^= 1
+    corrected = bits[id]
+    return original, corrected
 
 def hamming(data: str) -> str:
     """
@@ -52,5 +63,9 @@ def hamming(data: str) -> str:
         print("No se detectaron errores.")
     else:
         print(f"Se detectó un error en la posición {error}.")
+        original, corrected = correct_error(bits, error)
+        print(f"El bit en la posición {error} cambió de {original} a {corrected}.")
+        corrected_msg = ''.join(str(b) for b in bits)
+        print(f"Mensaje corregido completo: {corrected_msg}")
 
     return data
