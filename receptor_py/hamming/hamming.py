@@ -12,6 +12,23 @@ def get_parity_positions(n: int) -> List[int]:
         p <<= 1
     return positions
 
+def compute_erros(bits: List[int], parity_positions: List[int]) -> int:
+    """
+    Recalcula cada bit de paridad y construye el sindrome.
+    El error es la suma de las posiciones de paridad que dieron paridad = 1.
+    """
+    n = len(bits)
+    error = 0
+
+    for p in parity_positions:
+        parity = 0
+        for i in range(p - 1, n, 2 * p):
+            parity ^= sum(bits[i : i + p]) % 2
+        if parity != 0:
+            error += p
+
+    return error
+
 def hamming(data: str) -> str:
     """
     Procesa una cadena de bits codificada con el código de Hamming y determina 
@@ -22,27 +39,18 @@ def hamming(data: str) -> str:
     data : str
         Cadena de bits recibida desde el emisor (datos + bits de paridad Hamming).
         Ejemplo: "1011010"
-
-    Ejemplo de uso:
-    ---------------
-    >>> recibido = "1011010"
-    >>> mensaje = hamming(recibido)
-    # Posible salida en consola:
-    # "No se detectaron errores. Mensaje original: 1011"
-    # o
-    # "Se detectó y corrigió un error en la posición 3. Mensaje corregido: 1001"
-    # o
-    # "Se detectaron errores no corregibles. Mensaje descartado."
-
-    Notas:
-    ------
-    - El algoritmo asume que el mensaje fue codificado con Hamming por el emisor.
-    - Aplicar Hamming sobre un mensaje que no fue codificado con este método 
-      generará resultados inválidos.
     """
     print(f"Procesando mensaje Hamming (receptor): {data}")
     bits = [int(ch) for ch in data]
     n = len(bits)
     parity_positions = get_parity_positions(n)
     print('posiciones de los bits de paridad:', parity_positions)
+
+    error = compute_erros(bits, parity_positions)
+
+    if error == 0:
+        print("No se detectaron errores.")
+    else:
+        print(f"Se detectó un error en la posición {error}.")
+
     return data
