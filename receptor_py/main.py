@@ -1,4 +1,6 @@
 from hamming.hamming import hamming
+from todo.todo import todo
+from pathlib import Path
 
 def main():
     print("=== RECEPTOR ===\n")
@@ -20,9 +22,31 @@ def main():
         except ValueError:
             print("Error: Ingrese un número válido (1 o 2). Intente nuevamente.")
     
+    base_dir = Path(__file__).resolve().parent
+    message_path = base_dir.parent / "tests" / "mensaje.txt"
+
+    message = read_message(message_path)
+    print(f"Mensaje recibido: {message}")
+
     # Procesar según el algoritmo seleccionado
     if algorithm == 1:
         print("\n=== Algoritmo Hamming seleccionado ===")
-        hamming("sd")
+        hamming(message)
     elif algorithm == 2:
         print("\n=== Algoritmo TODO seleccionado ===")
+        todo(message)
+
+
+def read_message(file_path: Path) -> str:
+    """
+    Lee un mensaje en binario desde un archivo de texto.
+    `file_path` debe ser un objeto Path con la ruta completa.
+    """
+    if not file_path.exists():
+        raise FileNotFoundError(f"No se encontró el archivo {file_path}")
+
+    with file_path.open("r", encoding="utf-8") as file:
+        return file.read().strip()
+
+
+main()

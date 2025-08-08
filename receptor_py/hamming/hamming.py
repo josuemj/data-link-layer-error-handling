@@ -26,5 +26,5 @@ def hamming(data: str) -> str:
     - Aplicar Hamming sobre un mensaje que no fue codificado con este método 
       generará resultados inválidos.
     """
-    print(f"Procesando mensaje Hamming: {data}")
+    print(f"Procesando mensaje Hamming (receptor): {data}")
     return data
