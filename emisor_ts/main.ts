@@ -28,7 +28,7 @@ function main(): void {
     
     let algorithm: number = 0;
     while (true) {
-        const input = readlineSync.question('Ingrese su opción (1 o 2): ');
+        const input = readlineSync.question('Ingrese su opcion (1 o 2): ');
         algorithm = parseInt(input);
         
         if (algorithm === 1 || algorithm === 2) {
