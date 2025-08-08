@@ -43,7 +43,7 @@ function main(): void {
         case 1:
             console.log('\n=== Algoritmo Hamming seleccionado ===');
             const hammingResult = hammingCode(binaryString);
-            // setMessage('../tests/mensaje.txt', hammingResult);
+            setMessage('../tests/mensaje.txt', hammingResult);
             break;
         case 2:
             console.log('\n=== Algoritmo TODO seleccionado ===');

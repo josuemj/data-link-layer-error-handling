@@ -22,6 +22,20 @@ function bitsStringToArray(str: string): number[] {
 }
 
 /**
+ * Convierte un array de bits en una cadena de caracteres
+ */
+function bitsArrayToString(bits: number[]): string {
+    return bits
+        .map(b => {
+            if (b !== 0 && b !== 1) {
+                throw new Error(`Valor inválido en array de bits: ${b}`);
+            }
+            return b.toString();
+        })
+        .join('');
+}
+
+/**
  * Inserta marcadores en las posiciones de paridad y colocar los bits de datos en el resto de posiciones
  */
 function insertParityPlaceholders(dataBits: number[]): number[] {
@@ -43,6 +57,30 @@ function insertParityPlaceholders(dataBits: number[]): number[] {
     return encoded;
 }
 
+/**
+ * Recorre cada posicion de paridad y calcula su valor haciendo paridad modulo 2 de los bloques que le corresponden
+ */
+function calculateParityBits(encoded: number[]): string {
+    const n = encoded.length;
+
+    // Encuentra todas las posiciones de paridad
+    for (let pos = 1; pos <= n; pos <<= 1) {
+        let parity = 0;
+
+        // Empieza en pos-1, avanza en saltos de pos*2 y suma pos bits cada vez
+        for (let i = pos - 1; i < n; i += pos * 2) {
+            for (let j = i; j < i + pos && j < n; j++) {
+                parity ^= encoded[j];
+            }
+        }
+
+        // Escribe la paridad calculada
+        encoded[pos - 1] = parity;
+    }
+
+    return bitsArrayToString(encoded);
+}
+
 
 /**
  * Genera el código Hamming para detección y corrección de errores de un bit.
@@ -50,17 +88,13 @@ function insertParityPlaceholders(dataBits: number[]): number[] {
  * @param data - Cadena binaria de entrada (solo caracteres '0' y '1')
  * @returns Cadena binaria con bits de paridad de Hamming añadidos
  * 
- * @example
- * ```typescript
- * const original = "1011";
- * const encoded = hammingCode(original);
- * console.log(encoded); // Cadena con bits de paridad insertados
- * ```
  */
 export default function hammingCode(data: string): string {
     const output = bitsStringToArray(data);
-    console.log(insertParityPlaceholders(output))
+    const withPlaceholders = insertParityPlaceholders(output);
+    console.log('Posiciones con bits de paridad (en 0): ' + withPlaceholders)
 
-    
-    return data;
+    const newMessage = calculateParityBits(withPlaceholders)
+    console.log('Nuevo mensaje: ' + newMessage)
+    return newMessage;
 }
