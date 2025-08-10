@@ -1,6 +1,6 @@
 import * as readlineSync from 'readline-sync';
 import hammingCode from './src/hamming/hamming';
-import todo from './src/todo/todo';
+import  fletcher16_emit from './src/fletcher16/fletcher16';
 import setMessage from './src/utils/utils';
 
 function main(): void {
@@ -24,8 +24,8 @@ function main(): void {
     //  opciones de algoritmos
     console.log('\n=== Seleccione el algoritmo ===');
     console.log('1. Hamming');
-    console.log('2. (Por implementar)');
-    
+    console.log('2. Fletcher-16');
+
     let algorithm: number = 0;
     while (true) {
         const input = readlineSync.question('Ingrese su opcion (1 o 2): ');
@@ -46,9 +46,9 @@ function main(): void {
             setMessage('../tests/mensaje.txt', hammingResult);
             break;
         case 2:
-            console.log('\n=== Algoritmo TODO seleccionado ===');
-            const todoResult = todo(binaryString);
-            setMessage('../tests/mensaje.txt', todoResult);
+            console.log('\n=== Algoritmo Fletcher-16 seleccionado ===');
+            const fletcherResult = fletcher16_emit(binaryString);
+            setMessage('../tests/mensaje.txt', fletcherResult);
             break;
     }
 }

@@ -1,5 +1,5 @@
 from hamming.hamming import hamming
-from todo.todo import todo
+from fletcher16.fletcher16 import fletcher16_receive
 from pathlib import Path
 
 def main():
@@ -8,7 +8,7 @@ def main():
     # Mostrar opciones de algoritmos
     print("=== Seleccione el algoritmo de recepción ===")
     print("1. Hamming")
-    print("2. TODO (Por implementar)")
+    print("2. Fletcher-16")
     
     # Validar selección del algoritmo
     algorithm = 0
@@ -33,8 +33,8 @@ def main():
         print("\n=== Algoritmo Hamming seleccionado ===")
         hamming(message)
     elif algorithm == 2:
-        print("\n=== Algoritmo TODO seleccionado ===")
-        todo(message)
+        print("\n=== Algoritmo Fletcher-16 seleccionado ===")
+        fletcher16_receive(message)
 
 
 def read_message(file_path: Path) -> str:
