@@ -1,7 +1,7 @@
 import WebSocket from "ws";
 import { createInterface } from "readline/promises";
 import { stdin as input, stdout as output } from "node:process";
-import hammingCode from './hamming/hamming'
+import hammingCode from "./hamming/hamming";
 
 /* =========================
  * Utilidades de presentación
@@ -18,6 +18,38 @@ function textToAsciiBits(text: string): string {
 }
 
 /* =========================
+ * Ruido (voltear K bits)
+ * ========================= */
+
+function flipAt(s: string, i: number): string {
+  const arr = s.split("");
+  arr[i] = arr[i] === "0" ? "1" : "0";
+  return arr.join("");
+}
+
+/** Devuelve { noised, positions } con K índices únicos aleatorios [0..len-1] */
+function addNoiseKFlips(bits: string, k: number): { noised: string; positions: number[] } {
+  const n = bits.length;
+  if (k <= 0) return { noised: bits, positions: [] };
+  if (k > n) throw new Error(`k=${k} excede longitud (${n})`);
+
+  const positions: number[] = [];
+  const picked = new Set<number>();
+  while (positions.length < k) {
+    const idx = Math.floor(Math.random() * n);
+    if (!picked.has(idx)) {
+      picked.add(idx);
+      positions.push(idx);
+    }
+  }
+  positions.sort((a, b) => a - b);
+
+  let out = bits;
+  for (const p of positions) out = flipAt(out, p);
+  return { noised: out, positions };
+}
+
+/* =========================
  * Algoritmos de Enlace
  * ========================= */
 
@@ -28,6 +60,7 @@ function normalizeAlgo(a: string): Algo {
   if (x === "hamming" || x === "fletcher16") return x;
   return "hamming";
 }
+
 /* =========================
  * Main (CLI + WebSocket)
  * ========================= */
@@ -58,17 +91,44 @@ async function main() {
     // Aplicar algoritmo
     let encoded: string;
     if (algorithm === "hamming") {
-      //TODO
       encoded = hammingCode(payloadBits);
     } else {
-      //TODO
-      encoded = '000';
+      // TODO: implementar fletcher16 en el emisor si lo necesitas
+      encoded = "000";
+    }
+
+    // ¿Agregar ruido?
+    const noiseAns = (await rl.question("¿Agregar ruido? (s/n) [n]: ")).trim().toLowerCase();
+    let finalBits = encoded;
+    let noiseMeta: { enabled: boolean; flips: number; positions: number[] } = {
+      enabled: false,
+      flips: 0,
+      positions: [],
+    };
+
+    if (noiseAns === "s" || noiseAns === "si" || noiseAns === "sí") {
+      const max = encoded.length;
+      let kStr = await rl.question(`¿Cuántos bits voltear? (1..${max}): `);
+      let k = parseInt(kStr, 10);
+      if (!Number.isFinite(k) || k < 1 || k > max) {
+        console.error(`Valor inválido: ${kStr}. Debe estar entre 1 y ${max}. Saliendo.`);
+        process.exit(1);
+      }
+
+      const { noised, positions } = addNoiseKFlips(encoded, k);
+      finalBits = noised;
+      noiseMeta = { enabled: true, flips: k, positions };
+      console.log(`\nRuido aplicado: ${k} bit(s) volteado(s) en posiciones (0-based): ${positions.join(", ")}`);
     }
 
     // Payload solicitado
     const payload = {
       algorithm,
-      message: encoded,
+      message: finalBits,
+      meta: {
+        original_len: encoded.length,
+        noise: noiseMeta,
+      },
     };
 
     console.log("\nPayload a enviar:");

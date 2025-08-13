@@ -5,7 +5,6 @@ import websockets
 from hamming.hamming import hamming
 
 
-
 # -------- utilidades ----------
 def bits_to_text(bits: str) -> str:
     if not bits:
