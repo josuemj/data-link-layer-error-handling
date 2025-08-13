@@ -1,4 +1,6 @@
-from typing import List
+from typing import List, Tuple
+
+USE_SECDED = True
 
 def get_parity_positions(n: int) -> List[int]:
     """
@@ -14,25 +16,35 @@ def get_parity_positions(n: int) -> List[int]:
 
 def compute_erros(bits: List[int], parity_positions: List[int]) -> int:
     """
-    Recalcula cada bit de paridad y construye el error.
+    Recalcula cada bit de paridad y construye el error (síndrome).
     El error es la suma de las posiciones de paridad que dieron paridad = 1.
     """
     n = len(bits)
     error = 0
-
     for p in parity_positions:
         parity = 0
         for i in range(p - 1, n, 2 * p):
             parity ^= sum(bits[i : i + p]) % 2
         if parity != 0:
             error += p
-
     return error
 
-def correct_error(bits: List[int], error: int) -> None:
+def _failing_parities(bits: List[int], parity_positions: List[int]) -> List[int]:
+    """Lista de posiciones de paridad que fallan (para reportar)."""
+    n = len(bits)
+    fails = []
+    for p in parity_positions:
+        parity = 0
+        for i in range(p - 1, n, 2 * p):
+            parity ^= sum(bits[i : i + p]) % 2
+        if parity != 0:
+            fails.append(p)
+    return fails
+
+def correct_error(bits: List[int], error: int) -> Tuple[int, int]:
     """
     Invierte el bit en la posicion indicada por el error
-    Retorna una tupla (bit_original, bit_corregido)
+    Retorna (bit_original, bit_corregido)
     """
     id = error - 1
     original = bits[id]
@@ -46,35 +58,88 @@ def extract_data(bits: List[int], parity_positions: List[int]) -> List[int]:
     """
     return [bits[i] for i in range(len(bits)) if (i + 1) not in parity_positions]
 
+def _overall_parity(bits: List[int]) -> int:
+    """XOR de todos los bits (0=par, 1=impar)."""
+    return sum(bits) & 1
+
+def _candidate_pairs_for_double_error(syndrome: int, n_code: int) -> List[Tuple[int, int]]:
+    """
+    Todas las parejas (i,j) con i<j y i ^ j == síndrome, 1 ≤ i,j ≤ n_code.
+    Estas son las posibles posiciones si asumimos EXACTAMENTE 2 errores en code_bits.
+    """
+    pairs = []
+    for i in range(1, n_code + 1):
+        j = i ^ syndrome
+        if 1 <= j <= n_code and i < j:
+            pairs.append((i, j))
+    return pairs
+
 def hamming(data: str) -> str:
-    """
-    Procesa una cadena de bits codificada con el código de Hamming y determina 
-    el estado del mensaje recibido según las reglas.
-
-    Parámetros:
-    -----------
-    data : str
-        Cadena de bits recibida desde el emisor (datos + bits de paridad Hamming).
-        Ejemplo: "1011010"
-    """
     print(f"Procesando mensaje Hamming (receptor): {data}")
-    bits = [int(ch) for ch in data]
-    n = len(bits)
-    parity_positions = get_parity_positions(n)
-    print('posiciones de los bits de paridad:', parity_positions)
+    bits_all = [int(ch) for ch in data]
+    n_all = len(bits_all)
 
-    error = compute_erros(bits, parity_positions)
+    if USE_SECDED:
+        code_bits = bits_all[:-1]
+        global_pos = n_all
+        parity_positions = get_parity_positions(len(code_bits))
+        print('posiciones de los bits de paridad:', parity_positions, '(con paridad global al final)')
 
-    if error == 0:
-        print("No se detectaron errores.")
+        syndrome = compute_erros(code_bits, parity_positions)
+        gpar = _overall_parity(bits_all)
+
+        errores = []
+
+        if syndrome == 0 and gpar == 0:
+            print("No se detectaron errores.")
+        elif syndrome == 0 and gpar == 1:
+            errores.append((bits_all[-1], global_pos))
+        elif syndrome != 0 and gpar == 1:
+            original, _ = correct_error(code_bits, syndrome)
+            errores.append((original, syndrome))
+        else:  # múltiples errores
+            pairs = _candidate_pairs_for_double_error(syndrome, len(code_bits))
+            for i, j in pairs:
+                errores.append((code_bits[i-1], i))
+                errores.append((code_bits[j-1], j))
+            if 1 <= syndrome <= len(code_bits):
+                errores.append((code_bits[syndrome-1], syndrome))
+                errores.append((bits_all[-1], global_pos))
+
+        if errores:
+            print(f"errores: {len(errores)}")
+            for bit, pos in errores:
+                print(f"{bit},{pos}")
+
+        data_bits = extract_data(code_bits, parity_positions)
+        print('Mensaje original: ', ''.join(str(b) for b in data_bits))
+        return ''.join(str(b) for b in data_bits)
+
     else:
-        print(f"Se detecto un error en la posicion {error}.")
-        original, corrected = correct_error(bits, error)
-        print(f"El bit en la posicion {error} cambio de {original} a {corrected}.")
-        corrected_msg = ''.join(str(b) for b in bits)
-        print(f"Mensaje corregido completo: {corrected_msg}")
+        parity_positions = get_parity_positions(n_all)
+        print('posiciones de los bits de paridad:', parity_positions, '(sin paridad global)')
 
-    data_bits = extract_data(bits, parity_positions)
-    data = ''.join(str(b) for b in data_bits)
-    print('Mensaje original: ', data)
-    return data
+        fails = _failing_parities(bits_all, parity_positions)
+        syndrome = sum(fails)
+        errores = []
+
+        if syndrome == 0:
+            print("No se detectaron errores.")
+        else:
+            if len(fails) >= 2:
+                pairs = _candidate_pairs_for_double_error(syndrome, n_all)
+                for i, j in pairs:
+                    errores.append((bits_all[i-1], i))
+                    errores.append((bits_all[j-1], j))
+            else:
+                original, _ = correct_error(bits_all, syndrome)
+                errores.append((original, syndrome))
+
+        if errores:
+            print(f"errores: {len(errores)}")
+            for bit, pos in errores:
+                print(f"{bit},{pos}")
+
+        data_bits = extract_data(bits_all, parity_positions)
+        print('Mensaje original: ', ''.join(str(b) for b in data_bits))
+        return ''.join(str(b) for b in data_bits)

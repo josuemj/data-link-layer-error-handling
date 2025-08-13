@@ -22,3 +22,11 @@ npm start
 4. Se escribe el mensaje del emisor en tests/mensaje.txt
 
 
+# USO DE APLICACIONES
+
+### Instalar dependiencias en emisor
+```bash
+cd emisor_ts
+npm install
+npx ts-node src/app.ts
+```

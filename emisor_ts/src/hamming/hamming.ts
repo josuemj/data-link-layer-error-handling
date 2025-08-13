@@ -57,6 +57,13 @@ function insertParityPlaceholders(dataBits: number[]): number[] {
     return encoded;
 }
 
+function appendGlobalParity(encoded: number[]): string {
+    // g = XOR de todos los bits actuales (paridad de todo el bloque)
+    const g = encoded.reduce((acc, b) => acc ^ b, 0);
+    encoded.push(g); // bit global al final
+    return bitsArrayToString(encoded);
+}
+
 /**
  * Recorre cada posicion de paridad y calcula su valor haciendo paridad modulo 2 de los bloques que le corresponden
  */
@@ -96,5 +103,5 @@ export default function hammingCode(data: string): string {
 
     const newMessage = calculateParityBits(withPlaceholders)
     console.log('Nuevo mensaje: ' + newMessage)
-    return newMessage;
+    return appendGlobalParity(bitsStringToArray(newMessage));
 }
