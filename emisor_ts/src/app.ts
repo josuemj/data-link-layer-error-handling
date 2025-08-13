@@ -17,23 +17,6 @@ function textToAsciiBits(text: string): string {
   return bits;
 }
 
-// Convierte string de bits a arreglo de bytes (números 0..255)
-// Asume longitud múltiplo de 8; si no, hace padding a la derecha con ceros.
-function bitsToBytes(bits: string): number[] {
-  const pad = (8 - (bits.length % 8)) % 8;
-  const padded = bits + "0".repeat(pad);
-  const out: number[] = [];
-  for (let i = 0; i < padded.length; i += 8) {
-    out.push(parseInt(padded.slice(i, i + 8), 2));
-  }
-  return out;
-}
-
-// Convierte número a binario fijo de n bits
-function toBits(n: number, width: number): string {
-  return (n >>> 0).toString(2).padStart(width, "0").slice(-width);
-}
-
 /* =========================
  * Algoritmos de Enlace
  * ========================= */
@@ -92,7 +75,7 @@ async function main() {
     console.log(JSON.stringify(payload, null, 2));
 
     // Enviar por WebSocket
-    const WS_URL = process.env.WS_URL || "ws://localhost:8765";
+    const WS_URL = process.env.WS_URL || "ws://0.0.0.0:8765";
     console.log(`\nConectando a ${WS_URL} ...`);
     const ws = new WebSocket(WS_URL);
 
