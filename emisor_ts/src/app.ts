@@ -2,6 +2,7 @@ import WebSocket from "ws";
 import { createInterface } from "readline/promises";
 import { stdin as input, stdout as output } from "node:process";
 import hammingCode from "./hamming/hamming";
+import fletcher16_emit from "./fletcher16/fletcher16";
 
 /* =========================
  * Utilidades de presentación
@@ -93,8 +94,8 @@ async function main() {
     if (algorithm === "hamming") {
       encoded = hammingCode(payloadBits);
     } else {
-      // TODO: implementar fletcher16 en el emisor si lo necesitas
-      encoded = "000";
+      
+      encoded = fletcher16_emit(payloadBits);
     }
 
     // ¿Agregar ruido?

@@ -3,6 +3,7 @@ import json
 import asyncio
 import websockets
 from hamming.hamming import hamming
+from fletcher16.fletcher16 import fletcher16_receive
 
 
 # -------- utilidades ----------
@@ -70,11 +71,38 @@ async def handler(ws):
 
             elif algorithm == "fletcher16":
                 # TODO: implementar verificación/decodificación Fletcher-16
-                await ws.send(json.dumps({
-                    "status": "error",
-                    "algorithm": algorithm,
-                    "reason": "Fletcher-16: TODO (no implementado)"
-                }))
+                try:
+                    data_bits = fletcher16_receive(bitstream)
+                    try:
+                        decoded_text = bits_to_text(data_bits)
+                    except Exception as e:
+                        await ws.send(json.dumps({
+                            "status": "error",
+                            "algorithm": algorithm,
+                            "reason": f"Error al convertir a ASCII: {e}"
+                        }))
+                        continue
+
+                    print("Texto decodificado:")
+                    print(decoded_text if decoded_text else "(vacío)")
+
+                    await ws.send(json.dumps({
+                        "status": "ok",
+                        "algorithm": algorithm,
+                        "decoded_text": decoded_text,
+                        "details": {
+                            "decoded_bits": data_bits,
+                            "input_len": len(bitstream),
+                            "output_len": len(data_bits)
+                        }
+                    }))
+
+                except ValueError as e:
+                    await ws.send(json.dumps({
+                        "status": "error",
+                        "algorithm": algorithm,
+                        "reason": str(e)
+                    }))
 
             else:
                 await ws.send(json.dumps({
